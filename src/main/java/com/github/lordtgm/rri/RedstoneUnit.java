@@ -1,9 +1,12 @@
 package com.github.lordtgm.rri;
 
+import com.github.lordtgm.rri.units.RedstoneTorchUnit;
 import it.unimi.dsi.fastutil.Pair;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.timer.TaskSchedule;
 import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class RedstoneUnit {
@@ -46,6 +50,7 @@ public class RedstoneUnit {
                         functionFunctionPair -> functionFunctionPair.left().apply(location.getBlock())
                 ).orElse(false)
         ) {
+
             return registry.values().stream()
                     .filter(pair -> pair.left().apply(location.getBlock()))
                     .findFirst()
@@ -97,7 +102,7 @@ public class RedstoneUnit {
     public byte getPowerLevel(boolean allowWeak) {
         return
                 allowWeak ?
-                        (byte) Math.max(getStrongPowerLevel(), getStrongPowerLevel()) :
+                        (byte) Math.max(getStrongPowerLevel(), getWeakPowerLevel()) :
                         getStrongPowerLevel();
     }
 
@@ -121,7 +126,7 @@ public class RedstoneUnit {
      */
     public @NotNull Pair<Byte, Byte> collectPower() {
         return forEachNeighbour(
-                neighbour -> getPowerDelivery(location.withPoint(point -> point.sub(neighbour.point())))
+                neighbour -> RedstoneUnit.getRedstoneUnit(neighbour).getPowerDelivery(location)
         )
                 .stream()
                 .reduce
@@ -141,7 +146,7 @@ public class RedstoneUnit {
     }
 
     public boolean update() {
-        return false;
+        return isSolid() && updateSolid();
     }
 
     public boolean updateSolid() {
@@ -173,8 +178,8 @@ public class RedstoneUnit {
         };
     }
 
-    public Direction[] getConnectionPoints() {
-        return new Direction[0];
+    public List<Direction> getConnectionPoints() {
+        return List.of(new Direction[0]);
     }
 
     public <T> List<T> forEachNeighbour(Function<Location, T> function) {
@@ -182,7 +187,7 @@ public class RedstoneUnit {
     }
 
     public void updateAndNotify() {
-        if (update() | (isSolid() && updateSolid())) {
+        if (update()) {
             postUpdate();
             notifyNeighbours();
         }
@@ -194,6 +199,14 @@ public class RedstoneUnit {
             return null;
         });
 
+    }
+
+    public void delayedUpdateAndNotify(int delay, Runnable function) {
+        MinecraftServer.getSchedulerManager().scheduleTask(() -> {
+            if (RedstoneUnit.getRedstoneUnit(getLocation()) != this) return;
+            function.run();
+            notifyNeighbours();
+        }, TaskSchedule.tick(delay * 2), TaskSchedule.stop());
     }
 
     public void tick() {

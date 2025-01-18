@@ -2,6 +2,7 @@ package com.github.lordtgm.rri;
 
 import com.github.lordtgm.rri.units.RedstoneBlockUnit;
 import com.github.lordtgm.rri.units.RedstoneDustUnit;
+import com.github.lordtgm.rri.units.RedstoneTorchUnit;
 import it.unimi.dsi.fastutil.Pair;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.instance.block.Block;
@@ -18,9 +19,14 @@ public class RedstoneUnitBlockHandler implements BlockHandler {
     static {
         RedstoneUnit.register(RedstoneBlockUnit.class, Pair.of(block -> Utils.sameBlockType(block, Block.REDSTONE_BLOCK), RedstoneBlockUnit::new));
         RedstoneUnit.register(RedstoneDustUnit.class, Pair.of(block -> Utils.sameBlockType(block, Block.REDSTONE_WIRE), RedstoneDustUnit::new));
+        RedstoneUnit.register(RedstoneTorchUnit.class, Pair.of(
+                block -> Utils.sameBlockType(block, Block.REDSTONE_TORCH) || Utils.sameBlockType(block, Block.REDSTONE_WALL_TORCH)
+                , RedstoneTorchUnit::new));
         for (Block block : new Block[]{
                 Block.REDSTONE_WIRE,
-                Block.REDSTONE_BLOCK
+                Block.REDSTONE_BLOCK,
+                Block.REDSTONE_TORCH,
+                Block.REDSTONE_WALL_TORCH
         }) {
             blockHandlers.put(block, new RedstoneUnitBlockHandler());
         }
@@ -36,9 +42,10 @@ public class RedstoneUnitBlockHandler implements BlockHandler {
 
     @Override
     public void onPlace(@NotNull BlockHandler.Placement placement) {
-        RedstoneUnit.updateRedstoneUnit(new Location(placement.getInstance(), placement.getBlockPosition()));
-        RedstoneUnit.getRedstoneUnit(new Location(placement.getInstance(), placement.getBlockPosition())).update();
-        RedstoneUnit.getRedstoneUnit(new Location(placement.getInstance(), placement.getBlockPosition())).notifyNeighbours();
+        Location location = new Location(placement.getInstance(), placement.getBlockPosition());
+        RedstoneUnit newUnit = RedstoneUnit.updateRedstoneUnit(location);
+        newUnit.update();
+        newUnit.notifyNeighbours();
     }
 
     @Override

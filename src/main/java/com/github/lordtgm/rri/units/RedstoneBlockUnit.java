@@ -4,6 +4,8 @@ import com.github.lordtgm.rri.Location;
 import com.github.lordtgm.rri.RedstoneUnit;
 import net.minestom.server.utils.Direction;
 
+import java.util.List;
+
 public class RedstoneBlockUnit extends RedstoneUnit {
     public RedstoneBlockUnit(Location location) {
         super(location);
@@ -11,8 +13,8 @@ public class RedstoneBlockUnit extends RedstoneUnit {
     }
 
     @Override
-    public Direction[] getConnectionPoints() {
-        return Direction.HORIZONTAL;
+    public List<Direction> getConnectionPoints() {
+        return List.of(Direction.HORIZONTAL);
     }
 
     @Override

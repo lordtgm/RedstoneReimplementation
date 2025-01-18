@@ -1,5 +1,6 @@
 package com.github.lordtgm.rri.test;
 
+import com.github.lordtgm.rri.RedstoneReimplementation;
 import com.github.lordtgm.rri.RedstoneUnitBlockHandler;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
@@ -7,7 +8,6 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
-import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.InstanceManager;
@@ -20,33 +20,7 @@ public class Main {
         // Initialization
         MinecraftServer minecraftServer = MinecraftServer.init();
 
-        RedstoneUnitBlockHandler.register();
-        MinecraftServer.getGlobalEventHandler().addListener(PlayerBlockPlaceEvent.class, playerBlockPlaceEvent -> {
-            if (RedstoneUnitBlockHandler.blockHandlers.containsKey(playerBlockPlaceEvent.getBlock())) {
-                playerBlockPlaceEvent.setBlock(playerBlockPlaceEvent.getBlock().withHandler(
-                        RedstoneUnitBlockHandler.blockHandlers.get(playerBlockPlaceEvent.getBlock())
-                ));
-            }
-//            if (playerBlockPlaceEvent.getBlock().namespace() == Block.REDSTONE_WIRE.namespace()) {
-//                playerBlockPlaceEvent.setBlock(playerBlockPlaceEvent.getBlock().withHandler(new BlockHandler() {
-//                    @Override
-//                    public @NotNull NamespaceID getNamespaceId() {
-//                        return NamespaceID.from("minestom:test");
-//                    }
-//
-//                    @Override
-//                    public void onPlace(@NotNull BlockHandler.Placement placement) {
-//                        if (Objects.equals(placement.getBlock().getProperty("power"), "15")) return;
-//                        placement.getInstance().setBlock(
-//                                placement.getBlockPosition(),
-//                                placement.getInstance().getBlock(placement.getBlockPosition())
-//                                        .withProperty("power", "15")
-//                        );
-//                    }
-//                }));
-//            }
-        });
-
+        RedstoneReimplementation.init(MinecraftServer.getGlobalEventHandler());
         // Create the instance
         InstanceManager instanceManager = MinecraftServer.getInstanceManager();
         DynamicRegistry.Key<DimensionType> dimensionType = MinecraftServer.getDimensionTypeRegistry()

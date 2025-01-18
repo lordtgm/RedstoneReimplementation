@@ -55,21 +55,20 @@ public class RedstoneDustUnit extends RedstoneUnit {
                 ||
                 Math.abs(getLocation().point().z() - neighbour.point().z()) > 1
         ) return false;
-        if (getLocation().point().y() - neighbour.point().y() == 1) {
-            if (neighbour.relative(new Pos(0, 1, 0)).getBlock().isSolid()) return false;
+        if (getLocation().point().x() - neighbour.point().x() == 0 && getLocation().point().z() - neighbour.point().z() == 0) {
+            return true;
         }
+        if (getLocation().point().y() - neighbour.point().y() == 1
+                && neighbour.relative(new Pos(0, 1, 0)).getBlock().isSolid()
+                && !neighbour.relative(new Pos(0, 1, 0)).point().samePoint(getLocation().point())
+        ) return false;
         if (getLocation().point().y() - neighbour.point().y() != 0) {
             if (!Utils.sameBlockType(neighbour.getBlock(), Block.REDSTONE_WIRE)) return false;
         }
-        if (getLocation().point().x() - neighbour.point().x() == 0
-                &&
-                getLocation().point().z() - neighbour.point().z() == 0) {
-            return true;
-        }
-        return !Optional.ofNullable(Utils.getDirectionAbsolute(
-                        getLocation().point(), neighbour.point().withY(getLocation().point().y())
-                )).map(direction -> getLocation().getBlock().getProperty(direction.name().toLowerCase(Locale.ROOT)))
-                .orElse("none").equals("none");
+        return !Optional.ofNullable(Utils.getDirectionAbsolute(getLocation().point(), neighbour.point().withY(getLocation().point().y()))).
+                map(direction -> getLocation().getBlock().getProperty(direction.name().toLowerCase(Locale.ROOT))).
+                orElse("none").
+                equals("none");
     }
 
     @Override
@@ -88,9 +87,8 @@ public class RedstoneDustUnit extends RedstoneUnit {
                     }
                 }
             }
-            if (
-                    List.of(RedstoneUnit.getRedstoneUnit(getLocation().relative(direction.vec())).getConnectionPoints())
-                            .contains(direction.opposite())
+            if (RedstoneUnit.getRedstoneUnit(getLocation().relative(direction.vec())).getConnectionPoints()
+                    .contains(direction.opposite())
             ) {
                 connections.put(direction, "side");
             }
@@ -133,7 +131,7 @@ public class RedstoneDustUnit extends RedstoneUnit {
     @Override
     public Pair<Byte, Boolean> getPowerDelivery(Location target) {
         byte power = getLocation().getBlock().getTag(Power);
-        if (Utils.sameBlockType(getLocation().getBlock(), Block.REDSTONE_WIRE)) {
+        if (Utils.sameBlockType(target.getBlock(), Block.REDSTONE_WIRE)) {
             power -= 1;
         }
         if (!isConnected(target)) {
